@@ -1,0 +1,46 @@
+require('..');
+
+var FILE = '/test/foo.es6';
+UTest({
+	
+	'include': function(done){
+
+		include
+			.js(FILE)
+			.done(function(resp){
+				eq_(resp.foo.add(1, 2), 3);
+				done();
+			});
+	},
+	
+	'io.File.read': function(){
+		
+		var content = io.File.read(FILE);
+		has_(content, 'function');
+	},
+	'io.File.readAsync': function(){
+		
+		return io
+			.File
+			.readAsync(FILE)
+			.done(function(content){
+				has_(content, 'function');
+			});
+	},
+
+	'io.File.read SourceMap': function(){
+		var content = io.File.read(FILE + '.map');
+		is_(content, 'String');
+		content = JSON.parse(content);
+		has_(content, 'mappings');
+	},
+	'io.File.readAsync SourceMap': function(){
+		return io
+			.File
+			.readAsync(FILE + '.map')
+			.done(function(content){
+				content = JSON.parse(content);
+				has_(content, 'mappings');
+			});
+	}
+});

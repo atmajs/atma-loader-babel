@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+  	"atma-loader-babel": ">0.0.0",
+    "atma": ">0.0.0"
+  },
+  "scripts": {
+      "test": "atma test --config config.js"
+  },
+  
+  "atma": {
+  	"plugins": [
+  		"atma-loader-babel"
+  	]
+  }
+}

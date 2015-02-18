@@ -1,0 +1,15 @@
+{
+  "name": "atma-loader-babel",
+  "version": "1.0.19",
+  "description": "Babel (6to5) compiler for `atma-io`, `IncludeJS` and `atma-server`.",
+  "author": "Alex Kit (alex.kit@atmajs.com)",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "atma-loader-stacktrace": "latest",
+    "babel": "^4.3.0"
+  },
+  "devDependencies": {
+    "atma-loader": "latest"
+  }
+}

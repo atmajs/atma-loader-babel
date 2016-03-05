@@ -390,7 +390,7 @@
 				
 				return obj;
 			}
-		});
+		}());
 		//end:source /node_modules/atma-loader/index.js
 	}(Loader = {}));
 	

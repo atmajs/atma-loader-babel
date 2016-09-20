@@ -18,9 +18,9 @@
 		return;
 	}
 	
-	(function(){
+	(function(module){
 		
-		include.exports = Loader.exports.create({
+		module.exports = Loader.exports.create({
 			name: 'atma-loader-babel',
 			options: {
 				mimeType: 'text/javascript',
@@ -28,7 +28,7 @@
 			},
 		}, Compiler.exports)
 		
-	}());
+	}(typeof include !== 'undefined' ? include : module));
 	
 	// stacktraces
 	require('atma-loader-stacktrace')();

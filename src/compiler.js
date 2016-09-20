@@ -1,14 +1,16 @@
 var _babel;
+var _utils;
 
 module.exports	= {
 	compile: function(source, path, config){
 		if (_babel == null) {
 			_babel = require('babel');
+			_utils = require('atma-utils');
 
 			require("babel/polyfill");
 		}
 		
-		var uri = new net.Uri(path),
+		var uri = new _utils.class_Uri(path),
 			filename = uri.toLocalFile();
 		
 		if (config.sourceMap == null) 

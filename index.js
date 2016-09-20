@@ -3,14 +3,12 @@
 	var Loader;
 	(function(module){
 		//source /node_modules/atma-loader/index.js
-		// should be used in DEV environment only. Compile es6 scripts for production afterwards.
+		///
+		/// Should be used in DEV environment only. Compile es6 scripts for production afterwards.
+		///
+		
 		(function(){
 			
-			if (typeof include === 'undefined' || typeof Class === 'undefined')  {
-				console.error('<atma-loader> should be used within `atma` env.');
-				return;
-			}
-		
 			module.exports = {
 				create: create
 			};
@@ -54,9 +52,8 @@
 				}
 			}
 		
-			var net = global.net,
-				File = global.io.File
-				;
+			var File = global.io && global.io.File || require('atma-io').File;
+			var Utils = require('atma-utils');
 				
 			function create_FileMiddleware(name, options, Compiler){
 				var Middleware = File.middleware[name] = {
@@ -83,58 +80,58 @@
 				File.registerExtensions(createExtensionsMeta());
 				
 				// Virtual Map Files
-				var SourceMapFile = Class({
-					Base: File,
-					Override: {
-						read: function(opts){
-							if (this.exists('mapOnly')) 
-								return this.super(opts)
-							
-							var path = this.getSourcePath();
-							if (path == null) 
-								return null;
-							
-							var file = new File(path);
-							file.read(opts);
-							return (this.content = file.sourceMap);
-						},
-						readAsync: function(opts){
-							if (this.exists('mapOnly')) 
-								return this.super(opts)
-							
-							var path = this.getSourcePath();
-							if (path == null) 
-								return new Class.Deferred().reject({code: 404});
-							
-							var file = new File(path),
-								self = this;
-							
-							return file
-								.readAsync(opts)
-								.pipe(function(){
-									return (self.content = file.sourceMap);
-								});
-						},
-						exists: function(check){
-							if (this.super()) 
-								return true;
-							if (check === 'mapOnly') 
-								return false;
-							
-							var path = this.getSourcePath();
-							return path != null
-								? File.exists(path)
-								: false;
-						}
-					},
-					getSourcePath: function(){
+				var SourceMapFile = class SourceMapFile extends File {
+					constructor () {
+						super(...arguments)
+					}
+					read (opts) {
+						if (this.exists('mapOnly')) 
+							return super.read(opts)
+						
+						var path = this.getSourcePath();
+						if (path == null) 
+							return null;
+						
+						var file = new File(path);
+						file.read(opts);
+						return (this.content = file.sourceMap);
+					}
+					
+					readAsync (opts){
+						if (this.exists('mapOnly')) 
+							return super.readAsync(opts)
+						
+						var path = this.getSourcePath();
+						if (path == null) 
+							return new Utils.class_Dfr().reject({code: 404});
+						
+						var file = new File(path);
+						return file
+							.readAsync(opts)
+							.then(() => {
+								return (this.content = file.sourceMap);
+							});
+					}
+					exists (check) {
+						if (super.exists()) 
+							return true;
+						if (check === 'mapOnly') 
+							return false;
+						
+						var path = this.getSourcePath();
+						return path != null
+							? File.exists(path)
+							: false;
+					}
+				
+					getSourcePath () {
 						var path = this.uri.toString(),
 							source = path.replace(/\.map$/i, '');
 						return path === source
 							? null
 							: source;
 					}
-				});
+				};
 				
 				var Factory = File.getFactory();
 				options.extensions.forEach(function(ext){
@@ -176,58 +173,68 @@
 					readSourceMapAsync = Loader.loadSourceMapAsync
 					;
 					
-				var Virtual = Class({
-					Base: File,
-					exists: function(){
+				var Virtual = class VirtualFile extends File {
+					constructor () {
+						super(...arguments)
+					}
+					exists () {
 						return true;
-					},
-					existsAsync: function(cb){
+					}
+					existsAsync (cb) {
 						cb(null, true)
-					},
-					read: function(options){
+					}
+					read (options) {
 						return this.content
 							|| (this.content = read.call(this, this.uri.toLocalFile(), options));
-					},
-					readAsync: function(options) {
-						var dfr = new Class.Deferred(),
-							self = this;
-						if (self.content) 
-							return dfr.resolve(self.content);
-						
-						readAsync.call(this, this.uri.toLocalFile(), options, function(error, content){
-							if (error) {
-								dfr.reject(error);
-								return;
-							}
-							dfr.resolve(self.content = content);
-						});
-						return dfr;
-					},
-					readSourceMapAsync: readSourceMapAsync == null ? null : function(options){
-						var dfr = new Class.Deferred(),
-							self = this;
-						if (self.sourceMap) 
-							return dfr.resolve(self.sourceMap);
-						
-						readSourceMapAsync.call(this, options, function(error, content){
-							if (error) {
-								dfr.reject(error);
-								return;
-							}
-							dfr.resolve(self.sourceMap = sourceMap);
-						});
-						return dfr;
-					},
-					Override: {
-						write: Loader.write  || function(){
-							return this.super(arguments);
-						},
-						writeAsync: Loader.writeAsync || function(){
-							return this.super(arguments);
-						}
 					}
-					
-				});
+					readAsync (options) {
+						return new Promise((resolve, reject) => {
+							if (this.content) {
+								resolve(this.content);
+								return;
+							}
+						
+							readAsync.call(this, this.uri.toLocalFile(), options, (error, content) => {
+								if (error) {
+									reject(error);
+									return;
+								}
+								resolve(this.content = content);
+							});
+						});
+					}
+					readSourceMapAsync (options) {
+						return new Promise((resolve, reject) => {
+							if (readSourceMapAsync) {
+								reject('readSourceMapAsync not implemented');
+								return;
+							}
+							if (this.sourceMap) {
+								resolve(this.sourceMap);
+								return;
+							}
+							readSourceMapAsync.call(this, options, (error, content) => {
+								if (error) {
+									reject(error);
+									return;
+								}
+								resolve(this.sourceMap = sourceMap);
+							});
+						})				
+					}
+					write () {
+						if (Loader.write) {
+							return Loader.write.call(this, ...arguments);
+						}
+						return super.write(...arguments);
+					}
+					writeAsync () {
+						if (Loader.write) {
+							return Loader.writeAsync.call(this, ...arguments);
+						}
+						return super.writeAsync(...arguments);
+					}
+				};
 				var Factory = File.getFactory();
 				options.extensions.forEach(function(ext){
 					Factory.registerHandler(
@@ -237,6 +244,9 @@
 				});
 			}
 			function create_IncludeLoader(name, options, Compiler, Loader){
+				if (typeof include === 'undefined' || include == null || include.cfg == null) {
+					return;
+				}
 				include.cfg({
 					loader: obj_createMany(options.extensions, {
 						load: Loader == null ? null : function(resource, cb){
@@ -263,7 +273,7 @@
 			}
 			function create_HttpHandler(name, options, Compiler){
 				function try_createFile(base, url, onSuccess, onFailure) {
-					var path = net.Uri.combine(base, url);
+					var path = path_combine(base, url);
 					File
 						.existsAsync(path)
 						.fail(onFailure)
@@ -304,8 +314,7 @@
 				}
 				var _resolveStaticPath;
 				
-				return Class({
-					Base: Class.Deferred,
+				return Utils.class_create(Utils.class_Dfr, {
 					process: function(req, res, config){
 						var handler = this,
 							url = req.url,
@@ -390,6 +399,26 @@
 				
 				return obj;
 			}
+			function path_combine() {
+				var args = arguments,
+					str = '';
+				for (var i = 0, x, imax = args.length; i < imax; i++){
+					x = args[i];
+					if (!x)
+						continue;
+		
+					if (!str) {
+						str = x;
+						continue;
+					}
+		
+					if (str[str.length - 1] !== '/')
+						str += '/';
+		
+					str += x[0] === '/' ? x.substring(1) : x;
+				}
+				return str;
+			}
 		}());
 		//end:source /node_modules/atma-loader/index.js
 	}(Loader = {}));
@@ -402,16 +431,18 @@
 	(function(module){
 		// source compiler.js
 		var _babel;
+		var _utils;
 		
 		module.exports	= {
 			compile: function(source, path, config){
 				if (_babel == null) {
 					_babel = require('babel');
+					_utils = require('atma-utils');
 		
 					require("babel/polyfill");
 				}
 				
-				var uri = new net.Uri(path),
+				var uri = new _utils.class_Uri(path),
 					filename = uri.toLocalFile();
 				
 				if (config.sourceMap == null) 
@@ -494,9 +525,9 @@
 		return;
 	}
 	
-	(function(){
+	(function(module){
 		
-		include.exports = Loader.exports.create({
+		module.exports = Loader.exports.create({
 			name: 'atma-loader-babel',
 			options: {
 				mimeType: 'text/javascript',
@@ -504,7 +535,7 @@
 			},
 		}, Compiler.exports)
 		
-	}());
+	}(typeof include !== 'undefined' ? include : module));
 	
 	// stacktraces
 	require('atma-loader-stacktrace')();

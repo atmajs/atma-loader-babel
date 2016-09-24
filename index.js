@@ -1,5 +1,6 @@
 (function(){
-	
+	"use strict";
+
 	var Loader;
 	(function(module){
 		//source /node_modules/atma-loader/index.js

@@ -1,6 +1,6 @@
 {
   "name": "atma-loader-babel",
-  "version": "1.0.22",
+  "version": "1.0.24",
   "description": "Babel (6to5) compiler for `atma-io`, `IncludeJS` and `atma-server`.",
   "author": "Alex Kit (alex.kit@atmajs.com)",
   "main": "index.js",

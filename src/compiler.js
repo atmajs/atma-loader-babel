@@ -4,10 +4,10 @@ var _utils;
 module.exports	= {
 	compile: function(source, path, config){
 		if (_babel == null) {
-			_babel = require('babel');
+			_babel = require('babel-core');
 			_utils = require('atma-utils');
 
-			require("babel/polyfill");
+			require("babel-polyfill");
 		}
 		
 		var uri = new _utils.class_Uri(path),
@@ -17,19 +17,19 @@ module.exports	= {
 			config.sourceMap = true;
 
 		var options = _defaults(config.babel, {
-			script: true,
-			sourceMaps: config.sourceMap
+			filename: filename,
 		});
 		
-		var compiled = _compile(source, options, filename),	
+		var compiled = _compile(source, options),	
 			errors = compiled.errors == null || compiled.errors.length === 0
 				? null
 				: 'throw Error("Babel '
-					+ compiled.errors.join('\\\n').replace(/"/g, '\\"')
+					+ compiled.errors.join('\\\n').replace(/"/g, '\\"').replace(/\n/g, '\\n')
 					+ '");'
 			;
 		
 		if (errors) {
+			console.error('Babel Error for "' + filename + '"\n' + compiled.errors.join('\n'));
 			return {
 				content: errors,
 				sourceMap: errors
@@ -62,17 +62,12 @@ function _defaults(target, source){
 	}
 	return target;
 }
-function _compile(source, options, filename) {
+function _compile(source, options) {
 	try {
-		options.script = true;
 		
-		var compiled = _babel.transform(source, {
-			filename: filename,
-			sourceMap: Boolean(options.sourceMap || options.sourceMaps)
-		}); 
-
+		var compiled = _babel.transform(source, options);
 		var sourceMap = compiled.map;
-		if (sourceMap != null) 
+		if (sourceMap != null && typeof sourceMap !== 'string') 
 			sourceMap = JSON.stringify(sourceMap, null, 4);
 		return {
 			js: compiled.code,

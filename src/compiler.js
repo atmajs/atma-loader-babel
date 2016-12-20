@@ -64,6 +64,9 @@ function _defaults(target, source){
 }
 function _compile(source, options) {
 	try {
+		if (options && 'highlightCode' in options === false) {
+			options.highlightCode = false;
+		}
 		
 		var compiled = _babel.transform(source, options);
 		var sourceMap = compiled.map;
@@ -73,11 +76,7 @@ function _compile(source, options) {
 			js: compiled.code,
 			sourceMap: sourceMap
 		};
-	} catch(errors) {
-		if (errors.length == null) 
-			errors = [errors];
-		return {
-			errors: errors
-		};
+	} catch (error) {		
+		throw new Error(error.message + '\n' + error.codeFrame);
 	}
 }

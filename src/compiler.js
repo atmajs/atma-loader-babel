@@ -7,7 +7,7 @@ module.exports	= {
 			_babel = require('babel-core');
 			_utils = require('atma-utils');
 
-			require("babel-polyfill");
+			require('babel-polyfill');
 		}
 		
 		var uri = new _utils.class_Uri(path),
@@ -16,7 +16,7 @@ module.exports	= {
 		if (config.sourceMap == null) 
 			config.sourceMap = true;
 
-		var options = _defaults(config.babel, {
+		var options = _defaults(_clone(config.babel), {
 			filename: filename,
 		});
 		
@@ -61,6 +61,13 @@ function _defaults(target, source){
 			target[key] = source[key];
 	}
 	return target;
+}
+function _clone(source){
+	var out = {};
+	for (var key in source) {
+		out[key] = source[key];
+	} 
+	return out;
 }
 function _compile(source, options) {
 	try {

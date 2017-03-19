@@ -5,6 +5,10 @@
   "author": "Alex Kit (alex.kit@atmajs.com)",
   "main": "index.js",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atmajs/atma-loader-babel.git"
+  },
   "dependencies": {
     "atma-loader-stacktrace": "^0.1.1",
     "atma-utils": "^0.1.6",
